@@ -11,6 +11,7 @@ Package = Class{
        self.x = x
        self.y = y
        self.color = color
+       self.sprite = love.math.random(#game.packageSprites)
     end,
     size=16
 }
@@ -20,7 +21,7 @@ function Package:draw()
     else
         love.graphics.setColor(70, 70, 230)
     end
-    love.graphics.draw(game.packageSprite, self.x - self.size / 2, self.y - self.size / 2)
+    love.graphics.draw(game.packageSprites[self.sprite], self.x - self.size / 2, self.y - self.size / 2)
     --love.graphics.polygon("fill", self:getQuad())
 end
 
@@ -197,7 +198,10 @@ function game:init()
     game.sprites[13] = love.graphics.newImage("assets/goal_box_active.png")
     game.sprites[14] = love.graphics.newImage("assets/goal_box_wire.png")
 
-    game.packageSprite = love.graphics.newImage("assets/package.png")
+    game.packageSprites = {}
+    game.packageSprites[1] = love.graphics.newImage("assets/package.png")
+    game.packageSprites[2] = love.graphics.newImage("assets/package_2.png")
+    game.packageSprites[3] = love.graphics.newImage("assets/package_3.png")
 end
 
 function game:enter()
