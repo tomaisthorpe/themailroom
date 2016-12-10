@@ -13,13 +13,15 @@ Package = Class{
        self.color = color
        self.sprite = love.math.random(#game.packageSprites)
     end,
-    size=16
+    size=16,
+    delivered=false,
+    opacity=255,
 }
 function Package:draw()
     if self.color == "red" then
-        love.graphics.setColor(230, 70, 70)
+        love.graphics.setColor(230, 70, 70, self.opacity)
     else
-        love.graphics.setColor(70, 70, 230)
+        love.graphics.setColor(70, 70, 230, self.opacity)
     end
     love.graphics.draw(game.packageSprites[self.sprite], self.x - self.size / 2, self.y - self.size / 2)
     --love.graphics.polygon("fill", self:getQuad())
@@ -79,45 +81,54 @@ end
 
 
 function Package:move(dt, index)
-    -- Find which conveyor this package is on
-    local conveyor = self:getConveyor()
+    if self.delivered then
+        self.opacity = self.opacity - 510 * dt
+        
+        if self.opacity < 0 then
+            self.opacity = 0
+            self.shouldDelete = true
+        end
+    else
+        -- Find which conveyor this package is on
+        local conveyor = self:getConveyor()
 
-    -- If there isn't a conveyor don't move hte package
-    if conveyor ~= nil then
+        -- If there isn't a conveyor don't move hte package
+        if conveyor ~= nil then
 
-        local dest = conveyor:getEndPoint()
+            local dest = conveyor:getEndPoint()
 
-        -- Create vector from current x,y to goal:0
-        local direction = vector(dest.x - self.x, dest.y - self.y)
-        local movement = direction:normalized() * game.conveyorSpeed * dt
+            -- Create vector from current x,y to goal:0
+            local direction = vector(dest.x - self.x, dest.y - self.y)
+            local movement = direction:normalized() * game.conveyorSpeed * dt
 
-        self.x = self.x + movement.x
-        self.y = self.y + movement.y 
+            self.x = self.x + movement.x
+            self.y = self.y + movement.y 
 
-        -- Check if package is near
-        local test_x = self.x
-        local test_y = self.y
+            -- Check if package is near
+            local test_x = self.x
+            local test_y = self.y
 
-        if game.isSquareEmpty(index, self.x, self.y) == false then
-           self.x = self.x - movement.x
-           self.y = self.y - movement.y
+            if game.isSquareEmpty(index, self.x, self.y) == false then
+               self.x = self.x - movement.x
+               self.y = self.y - movement.y
+            end
+
+            goal = self:getGoal()
+            if goal ~= nil and goal.active == false then
+                self.x = self.x - movement.x
+                self.y = self.y - movement.y
+            end
         end
 
-        goal = self:getGoal()
-        if goal ~= nil and goal.active == false then
-            self.x = self.x - movement.x
-            self.y = self.y - movement.y
-        end
-    end
+        local goal = self:getGoal()
 
-    local goal = self:getGoal()
-
-    if goal ~= nil and goal.active then
-        self.shouldDelete = true
-        if goal.color ~= self.color then
-            game.lives = game.lives - 1
-        else
-            game.score = game.score + 1
+        if goal ~= nil and goal.active then
+            self.delivered = true
+            if goal.color ~= self.color then
+                game.lives = game.lives - 1
+            else
+                game.score = game.score + 1
+            end
         end
     end
 end
