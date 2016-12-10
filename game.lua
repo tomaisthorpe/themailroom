@@ -49,23 +49,51 @@ function Package:getConveyor()
     return nil
 end
 
+function Package:onGoal(goal)
+    local pos = self:getGridPosition()
+    if goal.row == pos.row and goal.col == pos.col then
+        return true
+    end
+
+    return false
+end
+
+
+function Package:getGoal()
+    for g=1,#game.goals,1 do
+        if self:onGoal(game.goals[g]) then
+            return game.goals[g]
+        end
+    end
+
+    return nil
+end
+
+
 function Package:move(dt)
     -- Find which conveyor this package is on
     local conveyor = self:getConveyor()
 
     -- If there isn't a conveyor don't move hte package
-    if conveyor == nil then return end
+    if conveyor ~= nil then
 
-    local goal = conveyor:getEndPoint()
+        local dest = conveyor:getEndPoint()
 
-    -- Create vector from current x,y to goal:0
-    local direction = vector(goal.x - self.x, goal.y - self.y)
-    local movement = direction:normalized() * game.conveyorSpeed * dt
+        -- Create vector from current x,y to goal:0
+        local direction = vector(dest.x - self.x, dest.y - self.y)
+        local movement = direction:normalized() * game.conveyorSpeed * dt
 
-    self.x = self.x + movement.x
-    self.y = self.y + movement.y 
+        self.x = self.x + movement.x
+        self.y = self.y + movement.y 
+    end
+
+    local goal = self:getGoal()
+
+    if goal ~= nil and goal.active then
+        self.shouldDelete = true
+        game.score = game.score + 1
+    end
 end
-
 
 
 game = {
@@ -91,7 +119,7 @@ game = {
         5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,0,0
     },
     conveyors = {},
-    conveyorSpeed = 16,
+    conveyorSpeed = 32,
     lastConveyorDirection="north",
     packages={},
     gridWidth = 25,
@@ -104,6 +132,7 @@ game = {
     entries={},
     goals={},
     mouseOver=nil, -- Set to non-nil if over editable grid square
+    score = 0,
 }
 
 function game:init()
@@ -126,8 +155,12 @@ function game:enter()
 end
 
 function game:update(dt)
-    for p=1,#game.packages,1 do 
+    for p=#game.packages,1,-1 do 
         game.packages[p]:move(dt)
+
+        if game.packages[p].shouldDelete then
+            table.remove(game.packages, p)
+        end
     end
 
     for e=1,#game.entries,1 do
@@ -196,7 +229,7 @@ end
 function game:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.setFont(game.font)
-    love.graphics.print("Score: 0", 0, 0, 0, 2)
+    love.graphics.print("Score: " .. game.score, 0, 0, 0, 2)
     love.graphics.print("Mail Delivered: 0", 0, 26, 0, 2)
 
     -- Shift game window down
