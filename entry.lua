@@ -50,9 +50,10 @@ function Entry:update(dt)
         if self.timer > self.rate then
             self.timer = 0
 
+            local entryPoint = self:getEntryPoint()
+
             -- Check if a package is needed
-            if game.waveController:scoreNeeded() - #game.packages > 0 then
-                local entryPoint = self:getEntryPoint()
+            if game.waveController:scoreNeeded() - #game.packages > 0 and game.isPackageNear(0, entryPoint.x, entryPoint.y) == false then
 
                 -- Timer hit, so add a package
                 local package = Package(entryPoint.x, entryPoint.y, self.color)

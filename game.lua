@@ -78,7 +78,7 @@ function Package:getGoal()
 end
 
 
-function Package:move(dt)
+function Package:move(dt, index)
     -- Find which conveyor this package is on
     local conveyor = self:getConveyor()
 
@@ -93,6 +93,12 @@ function Package:move(dt)
 
         self.x = self.x + movement.x
         self.y = self.y + movement.y 
+
+        -- Check if package is near
+        --[[if game.isPackageNear(index, self.x, self.y) then]]
+            --self.x = self.x - movement.x
+            --self.y = self.y - movement.y
+        --[[end]]
 
         goal = self:getGoal()
         if goal ~= nil and goal.active == false then
@@ -238,7 +244,7 @@ end
 
 function game:update(dt)
     for p=#game.packages,1,-1 do 
-        game.packages[p]:move(dt)
+        game.packages[p]:move(dt, p)
 
         if game.packages[p].shouldDelete then
             table.remove(game.packages, p)
@@ -508,4 +514,19 @@ function game.gridToXY(row, col)
     top_y = (row - 1) * 32
 
     return {x = left_x, y = top_y }
+end
+
+function game.isPackageNear(package, x, y)
+    for p=1,#game.packages,1 do
+       if p ~= package then
+            x2 = game.packages[p].x
+            y2 = game.packages[p].y
+
+            dist = math.sqrt((x - x2) ^ 2 + (y - y2) ^ 2)
+            if dist < 15 then
+                return true
+            end
+        end
+    end
+    return false
 end
