@@ -1,6 +1,7 @@
 --Test = require "package"
 local Conveyor = require("conveyor")
 local Entry = require("entry")
+local Goal = require("goal")
 
 vector = require "hump.vector"
 
@@ -101,7 +102,8 @@ game = {
     floorColor = {150, 150, 150},
     backgroundColor = {10, 10, 10},
     borderColor = {130, 130, 130},
-    entries={}
+    entries={},
+    goals={}
 }
 
 function game:init()
@@ -120,6 +122,7 @@ function game:enter()
     table.insert(game.conveyors, Conveyor(8, 4, "south"))
 
     table.insert(game.entries, Entry(2, 4, true, 2))
+    table.insert(game.goals, Goal(6, 22, true))
 end
 
 function game:update(dt)
@@ -169,6 +172,11 @@ function game:draw()
     -- Draw entries
     for e=1,#game.entries,1 do
         game.entries[e]:draw()
+    end
+
+    -- Draw goals
+    for g=1,#game.goals,1 do
+        game.goals[g]:draw()
     end
     
     -- Draw conveyors
