@@ -9,7 +9,15 @@ Conveyor = Class{
 }
 
 function Conveyor:draw()
-    love.graphics.setColor(120, 30, 30)
+    if self.direction == "west" then
+        love.graphics.setColor(120, 30, 30)
+    elseif self.direction == "east" then
+        love.graphics.setColor(30, 120, 30)
+    elseif self.direction == "north" then
+        love.graphics.setColor(30, 30, 120)
+    elseif self.direction == "south" then
+        love.graphics.setColor(120, 120, 30)
+    end
 
     love.graphics.polygon("fill", game.getQuad(self.row, self.col)) 
 end
