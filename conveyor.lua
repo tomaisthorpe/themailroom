@@ -1,6 +1,6 @@
 Class = require "hump.class"
 
-Conveyor = Class{
+local Conveyor = Class{
     init = function(self, row, col, direction)
        self.row = row
        self.col = col
@@ -28,12 +28,14 @@ function Conveyor:getEndPoint()
     y = (self.row - 1) * 32
     
     if self.direction == "west" then
-        return {x = x, y = y + 16}
+        return {x = x - 1, y = y + 16}
     elseif self.direction == "east" then
-        return {x =  x + 32, y = y + 16}
+        return {x = x + 33, y = y + 16}
     elseif self.direction == "north" then
-        return {x = x + 16, y = y}
+        return {x = x + 16, y = y - 1}
     elseif self.direction == "south" then
-        return {x = x + 16, y = y + 32}
+        return {x = x + 16, y = y + 33}
     end
 end
+
+return Conveyor

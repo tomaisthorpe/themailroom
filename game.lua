@@ -1,17 +1,16 @@
 --Test = require "package"
-Conveyer = require "conveyor"
+local Conveyor = require("conveyor")
+local Entry = require("entry")
 
-Class = require "hump.class"
 vector = require "hump.vector"
 
 Package = Class{
     init = function(self, x, y)
-        self.x = x
-        self.y = y
+       self.x = x
+       self.y = y
     end,
-    size=16
+    size=10
 }
-
 function Package:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.polygon("fill", self:getQuad())
@@ -70,6 +69,7 @@ function Package:move(dt)
 end
 
 
+
 game = {
     tileSize = 32,
     layer1 = {
@@ -101,6 +101,7 @@ game = {
     floorColor = {150, 150, 150},
     backgroundColor = {10, 10, 10},
     borderColor = {130, 130, 130},
+    entries={}
 }
 
 function game:init()
@@ -111,21 +112,23 @@ end
 function game:enter()
     love.graphics.setBackgroundColor(game.backgroundColor)
 
-    table.insert(game.conveyors, Conveyor(4, 5, "east"))
-    table.insert(game.conveyors, Conveyor(4, 4, "east"))
-    table.insert(game.conveyors, Conveyor(4, 6, "south"))
-    table.insert(game.conveyors, Conveyor(5, 6, "south"))
-    table.insert(game.conveyors, Conveyor(6, 6, "west"))
-    table.insert(game.conveyors, Conveyor(6, 5, "west"))
-    table.insert(game.conveyors, Conveyor(6, 4, "north"))
-    table.insert(game.conveyors, Conveyor(5, 4, "north"))
+    table.insert(game.conveyors, Conveyor(3, 4, "south"))
+    table.insert(game.conveyors, Conveyor(4, 4, "south"))
+    table.insert(game.conveyors, Conveyor(5, 4, "south"))
+    table.insert(game.conveyors, Conveyor(6, 4, "south"))
+    table.insert(game.conveyors, Conveyor(7, 4, "south"))
+    table.insert(game.conveyors, Conveyor(8, 4, "south"))
 
-    table.insert(game.packages, Package(97, 112))
+    table.insert(game.entries, Entry(2, 4, true, 2))
 end
 
 function game:update(dt)
     for p=1,#game.packages,1 do 
         game.packages[p]:move(dt)
+    end
+
+    for e=1,#game.entries,1 do
+        game.entries[e]:update(dt)
     end
 end
 
@@ -163,6 +166,11 @@ function game:draw()
         end
     end
 
+    -- Draw entries
+    for e=1,#game.entries,1 do
+        game.entries[e]:draw()
+    end
+    
     -- Draw conveyors
     for c=1,#game.conveyors,1 do
         game.conveyors[c]:draw()
@@ -183,4 +191,11 @@ function game.getQuad(row, col)
     top_y = (row - 1) * 32
 
     return {left_x, top_y, left_x + 32, top_y, left_x + 32, top_y + 32, left_x, top_y + 32}
+end
+
+function game.gridToXY(row, col)
+    left_x = (col - 1) * 32
+    top_y = (row - 1) * 32
+
+    return {x = left_x, y = top_y }
 end
