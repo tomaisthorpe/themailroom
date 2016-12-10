@@ -7,19 +7,28 @@ local Entry = Class{
         self.active = active
         self.rate = rate
         self.timer = rate
-    end
+        self.frame = 0
+        self.frames = 27
+        if active then self.frame = self.frames end
+    end,
+    fps = 10,
+    frame_timer = 0
 }
 
 function Entry:draw()
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.polygon("fill", game.getQuad(self.row, self.col))
+    love.graphics.setColor(255, 255, 255)
+
+    pos = game.getQuad(self.row, self.col)
+    quad = love.graphics.newQuad(self.frame * 32, 0, 32, 32, game.entrySprites:getWidth(), game.entrySprites:getHeight())
+    love.graphics.draw(game.entrySprites, quad, pos[1], pos[2])
 end
 
 function Entry:setActive(active)
     self.active = active
 
     if active == true then
-        timer = 0
+        self.timer = -3.2
+        self.frame = 0
     end
 end
 
@@ -31,15 +40,36 @@ end
 function Entry:update(dt)
     self.timer = self.timer + dt
 
-    if self.timer > self.rate then
-        self.timer = 0
+    if self.active and self.frame == self.frames then
+        if self.timer > self.rate then
+            self.timer = 0
 
-        local entryPoint = self:getEntryPoint()
+            local entryPoint = self:getEntryPoint()
 
-        -- Timer hit, so add a package
-        local package = Package(entryPoint.x, entryPoint.y)
+            -- Timer hit, so add a package
+            local package = Package(entryPoint.x, entryPoint.y)
 
-        table.insert(game.packages, package)
+            table.insert(game.packages, package)
+        end
+    end
+
+    -- Run trhough animation if needed
+    if self.active == true and self.frame ~= self.frames then
+        self.frame_timer = self.frame_timer + dt
+
+        if self.frame_timer > 1 / self.fps then
+            self.frame_timer = 0
+
+            self.frame = self.frame + 1
+        end
+    elseif self.active == false and self.frame ~= 0 then
+        self.frame_timer = self.frame_timer + dt
+
+        if self.frame_timer > 1 / self.fps then
+            self.frame_timer = 0
+
+            self.frame = self.frame - 1
+        end
     end
 end
 

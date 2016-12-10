@@ -133,11 +133,18 @@ game = {
     goals={},
     mouseOver=nil, -- Set to non-nil if over editable grid square
     score = 0,
+    sprites = {}
 }
 
 function game:init()
     game.font = love.graphics.newFont( "assets/veramono.ttf", 12 )
     game.font:setFilter( "nearest", "nearest" )
+
+    -- Load images
+    game.conveyorSprites = love.graphics.newImage("assets/conveyor.png")
+    game.entrySprites = love.graphics.newImage("assets/entry.png")
+
+    game.sprites[1] = love.graphics.newImage("assets/floor.png")
 end
 
 function game:enter()
@@ -152,6 +159,8 @@ function game:enter()
 
     table.insert(game.entries, Entry(2, 4, true, 2))
     table.insert(game.goals, Goal(6, 22, true))
+
+    game.entries[1]:setActive(false)
 end
 
 function game:update(dt)
@@ -165,6 +174,10 @@ function game:update(dt)
 
     for e=1,#game.entries,1 do
         game.entries[e]:update(dt)
+    end
+    
+    for c=1,#game.conveyors,1 do
+        game.conveyors[c]:update(dt)
     end
 end
 
@@ -242,14 +255,17 @@ function game:draw()
             block = game.layer1[game.getId(r, c)] 
 
             if block > 0 then
-                if block == 1 then
-                    love.graphics.setColor(game.floorColor)
-                elseif block == 2 or block == 3 then
-                    love.graphics.setColor(game.wallColor)
-                elseif block == 4 or block == 5 or block == 6 then
-                    love.graphics.setColor(game.borderColor)
+                if game.sprites[block] == nil then 
+                    if block == 2 or block == 3 then
+                        love.graphics.setColor(game.wallColor)
+                    elseif block == 4 or block == 5 or block == 6 then
+                        love.graphics.setColor(game.borderColor)
+                    end
+
+                    love.graphics.polygon("fill", game.getQuad(r, c))
+                else
+                    love.graphics.draw(game.sprites[block], game.getQuad(r, c)[1], game.getQuad(r, c)[2])
                 end
-                love.graphics.polygon("fill", game.getQuad(r, c))
             end
             
         end
