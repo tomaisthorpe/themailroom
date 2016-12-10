@@ -2,6 +2,7 @@
 Conveyer = require "conveyor"
 
 Class = require "hump.class"
+vector = require "hump.vector"
 
 Package = Class{
     init = function(self, x, y)
@@ -23,6 +24,49 @@ function Package:getQuad()
     bottom_y = self.y + self.size / 2
 
     return {left_x, top_y, right_x, top_y, right_x, bottom_y, left_x, bottom_y}
+end
+
+function Package:getGridPosition()
+    local col = math.ceil(self.x / 32)
+    local row = math.ceil(self.y / 32)
+
+    return {row=row, col=col}
+end
+
+function Package:onConveyor(conveyor)
+    local pos = self:getGridPosition()
+    if conveyor.row == pos.row and conveyor.col == pos.col then
+        return true
+    end
+
+    return false
+end
+
+function Package:getConveyor()
+    for c=1,#game.conveyors,1 do
+        if self:onConveyor(game.conveyors[c]) then
+            return game.conveyors[c]
+        end
+    end
+    
+    return nil
+end
+
+function Package:move(dt)
+    -- Find which conveyor this package is on
+    local conveyor = self:getConveyor()
+
+    -- If there isn't a conveyor don't move hte package
+    if conveyor == nil then return end
+
+    local goal = conveyor:getEndPoint()
+
+    -- Create vector from current x,y to goal:0
+    local direction = vector(goal.x - self.x, goal.y - self.y)
+    local movement = direction:normalized() * game.conveyorSpeed * dt
+
+    self.x = self.x + movement.x
+    self.y = self.y + movement.y 
 end
 
 
@@ -69,12 +113,20 @@ function game:enter()
 
     table.insert(game.conveyors, Conveyor(4, 5, "east"))
     table.insert(game.conveyors, Conveyor(4, 4, "east"))
-    table.insert(game.conveyors, Conveyor(4, 6, "east"))
+    table.insert(game.conveyors, Conveyor(4, 6, "south"))
+    table.insert(game.conveyors, Conveyor(5, 6, "south"))
+    table.insert(game.conveyors, Conveyor(6, 6, "west"))
+    table.insert(game.conveyors, Conveyor(6, 5, "west"))
+    table.insert(game.conveyors, Conveyor(6, 4, "north"))
+    table.insert(game.conveyors, Conveyor(5, 4, "north"))
 
-    table.insert(game.packages, Package(96, 112))
+    table.insert(game.packages, Package(97, 112))
 end
 
 function game:update(dt)
+    for p=1,#game.packages,1 do 
+        game.packages[p]:move(dt)
+    end
 end
 
 function game:keyreleased(key)
