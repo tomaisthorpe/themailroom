@@ -14,6 +14,14 @@ local Goal = Class{
 
 function Goal:setActive(active)
     self.active = active
+
+    -- Make it's "box" tile active/inactive
+    local tile = game.getId(self.row, self.col) + 1
+    if self.active then
+        game.layer1[tile] = 13
+    else
+        game.layer1[tile] = 12
+    end
 end
 
 function Goal:setColor(color)

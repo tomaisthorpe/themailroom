@@ -51,7 +51,6 @@ function WaveController:generateTimeline()
 end
 
 function WaveController:scoreNeeded()
-    print(self.target_score)
     return self.target_score - game.score
 end
 
@@ -103,18 +102,13 @@ function WaveController:update(dt)
         end
 
         -- Setup the goal points
-        goal_count = 1
-        if has_blue and has_red then goal_count = 2 end
-
         prev_chosen = nil
         also_chosen = nil
-
-        for i=1,goal_count,1 do
+        
+        while has_red or has_blue do
             chosen = love.math.random(#game.goals)
-
-            if chosen == prev_chosen then
-                i = i - 1
-            else
+            
+            if chosen ~= prev_chosen then
                 game.goals[chosen]:setActive(true)
                 
                 if has_blue then

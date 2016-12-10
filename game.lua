@@ -116,23 +116,23 @@ end
 game = {
     tileSize = 32,
     layer1 = {
-        2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,
-        3,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,3,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
-        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
+        8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,10,0,0,
+        3,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,11,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
+        4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,0,0,
         5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,0,0
     },
     conveyors = {},
@@ -157,6 +157,7 @@ game = {
 }
 
 function game:init()
+    love.graphics.setDefaultFilter("nearest", "nearest")
     love.window.setFullscreen(true)
    
     -- Work out scaling factor
@@ -186,13 +187,22 @@ function game:init()
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
     game.sprites[2] = love.graphics.newImage("assets/wall_top.png")
     game.sprites[7] = love.graphics.newImage("assets/wall_bottom.png")
-
+    game.sprites[8] = love.graphics.newImage("assets/wall_left_top.png")
+    game.sprites[3] = love.graphics.newImage("assets/wall_left_bottom.png")
+    game.sprites[4] = love.graphics.newImage("assets/floor_left.png")
+    game.sprites[9] = love.graphics.newImage("assets/floor_right.png")
+    game.sprites[10] = love.graphics.newImage("assets/wall_right_top.png")
+    game.sprites[11] = love.graphics.newImage("assets/wall_right_bottom.png")
+    game.sprites[12] = love.graphics.newImage("assets/goal_box_inactive.png")
+    game.sprites[13] = love.graphics.newImage("assets/goal_box_active.png")
+    game.sprites[14] = love.graphics.newImage("assets/goal_box_wire.png")
 
     game.packageSprite = love.graphics.newImage("assets/package.png")
 end
 
 function game:enter()
     love.graphics.setBackgroundColor(game.backgroundColor)
+    love.graphics.setDefaultFilter("nearest", "nearest")
 
     game.conveyors = {}
     table.insert(game.conveyors, Conveyor(3, 4, "south"))
