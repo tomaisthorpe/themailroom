@@ -144,11 +144,26 @@ end
 function game:mousemoved(x, y)
     pos = game.getGridPosition(x, y - game.translateY)
 
-    if game.layer1[game.getId(pos.row, pos.col)] == 1 then
+    if game.isConveyorPositionValid(pos.row, pos.col) then
         game.mouseOver = pos
     else
         game.mouseOver = nil
     end
+end
+
+function game.isConveyorPositionValid(row, col)
+    if game.layer1[game.getId(row, col)] == 1 then
+        -- Ensure no goal points
+        for g=1,#game.goals,1 do
+           if game.goals[g].row == row and game.goals[g].col == col then
+               return false
+            end
+        end
+
+        return true
+    end
+
+    return false
 end
 
 function game:mousereleased()
