@@ -10,11 +10,12 @@ Package = Class{
        self.x = x
        self.y = y
     end,
-    size=10
+    size=16
 }
 function Package:draw()
-    love.graphics.setColor(255, 255, 255)
-    love.graphics.polygon("fill", self:getQuad())
+    love.graphics.setColor(230, 70, 70)
+    love.graphics.draw(game.packageSprite, self.x - self.size / 2, self.y - self.size / 2)
+    --love.graphics.polygon("fill", self:getQuad())
 end
 
 function Package:getQuad()
@@ -147,6 +148,9 @@ function game:init()
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
     game.sprites[2] = love.graphics.newImage("assets/wall_top.png")
     game.sprites[7] = love.graphics.newImage("assets/wall_bottom.png")
+
+
+    game.packageSprite = love.graphics.newImage("assets/package.png")
 end
 
 function game:enter()
