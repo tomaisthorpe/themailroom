@@ -27,10 +27,7 @@ function Package:getQuad()
 end
 
 function Package:getGridPosition()
-    local col = math.ceil(self.x / 32)
-    local row = math.ceil(self.y / 32)
-
-    return {row=row, col=col}
+    return game.getGridPosition(self.x, self.y)
 end
 
 function Package:onConveyor(conveyor)
@@ -95,15 +92,18 @@ game = {
     },
     conveyors = {},
     conveyorSpeed = 16,
+    lastConveyorDirection="north",
     packages={},
     gridWidth = 25,
     gridHeight = 17,
+    gameTranslateY = 0, -- Needed for mouseOver calculation
     wallColor = {100, 100, 100},
     floorColor = {150, 150, 150},
     backgroundColor = {10, 10, 10},
     borderColor = {130, 130, 130},
     entries={},
-    goals={}
+    goals={},
+    mouseOver=nil, -- Set to non-nil if over editable grid square
 }
 
 function game:init()
@@ -141,6 +141,43 @@ function game:keyreleased(key)
     end
 end
 
+function game:mousemoved(x, y)
+    pos = game.getGridPosition(x, y - game.translateY)
+
+    if game.layer1[game.getId(pos.row, pos.col)] == 1 then
+        game.mouseOver = pos
+    else
+        game.mouseOver = nil
+    end
+end
+
+function game:mousereleased()
+    if game.mouseOver ~= nil then
+        -- Find if conveyor under mouse
+        local conveyorIndex = game.getConveyorIndex(game.mouseOver.row, game.mouseOver.col)
+
+        if conveyorIndex == nil then
+            table.insert(game.conveyors, Conveyor(game.mouseOver.row, game.mouseOver.col, game.lastConveyorDirection))
+        else
+            local conveyor = game.conveyors[conveyorIndex]
+            local cycle = {"north", "east", "south", "west"}
+
+            for d=1,#cycle,1 do
+                if cycle[d] == conveyor.direction then
+                    if d == #cycle then
+                        table.remove(game.conveyors, conveyorIndex)
+                        game.lastConveyorDirection = cycle[1]
+                    else
+                        conveyor.direction = cycle[d + 1]
+                        game.lastConveyorDirection = conveyor.direction 
+                    end
+                    break
+                end
+            end 
+        end
+    end
+end
+
 function game:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.setFont(game.font)
@@ -148,7 +185,8 @@ function game:draw()
     love.graphics.print("Mail Delivered: 0", 0, 26, 0, 2)
 
     -- Shift game window down
-    love.graphics.translate(0, (600 - (game.gridHeight * 32)))
+    game.translateY = (600 - (game.gridHeight * 32))
+    love.graphics.translate(0, game.translateY)
     
 
     for r=1,game.gridHeight,1 do
@@ -188,6 +226,13 @@ function game:draw()
     for p=1,#game.packages,1 do
         game.packages[p]:draw()
     end
+
+    -- Draw mouse box
+    if game.mouseOver ~= nil then
+        love.graphics.setColor(200, 200, 200)
+
+        love.graphics.polygon("line", game.getQuad(game.mouseOver.row, game.mouseOver.col))
+    end
 end
 
 function game.getId(row, col)
@@ -199,6 +244,23 @@ function game.getQuad(row, col)
     top_y = (row - 1) * 32
 
     return {left_x, top_y, left_x + 32, top_y, left_x + 32, top_y + 32, left_x, top_y + 32}
+end
+
+function game.getGridPosition(x, y)
+    local col = math.ceil(x / 32)
+    local row = math.ceil(y / 32)
+
+    return {row=row, col=col}
+end
+
+function game.getConveyorIndex(row, col)
+    for c=1,#game.conveyors,1 do
+        if game.conveyors[c].row == row and game.conveyors[c].col == col then
+            return c
+        end
+    end
+
+    return nil
 end
 
 function game.gridToXY(row, col)
