@@ -2,18 +2,24 @@
 local Conveyor = require("conveyor")
 local Entry = require("entry")
 local Goal = require("goal")
+local WaveController = require("wavegen")
 
 vector = require "hump.vector"
 
 Package = Class{
-    init = function(self, x, y)
+    init = function(self, x, y, color)
        self.x = x
        self.y = y
+       self.color = color
     end,
     size=16
 }
 function Package:draw()
-    love.graphics.setColor(230, 70, 70)
+    if self.color == "red" then
+        love.graphics.setColor(230, 70, 70)
+    else
+        love.graphics.setColor(70, 70, 230)
+    end
     love.graphics.draw(game.packageSprite, self.x - self.size / 2, self.y - self.size / 2)
     --love.graphics.polygon("fill", self:getQuad())
 end
@@ -86,13 +92,23 @@ function Package:move(dt)
 
         self.x = self.x + movement.x
         self.y = self.y + movement.y 
+
+        goal = self:getGoal()
+        if goal ~= nil and goal.active == false then
+            self.x = self.x - movement.x
+            self.y = self.y - movement.y
+        end
     end
 
     local goal = self:getGoal()
 
     if goal ~= nil and goal.active then
         self.shouldDelete = true
-        game.score = game.score + 1
+        if goal.color ~= self.color then
+            game.lives = game.lives - 1
+        else
+            game.score = game.score + 1
+        end
     end
 end
 
@@ -134,16 +150,38 @@ game = {
     goals={},
     mouseOver=nil, -- Set to non-nil if over editable grid square
     score = 0,
+    waveController = nil,
+    lives = 5,
+    scaling = 1,
     sprites = {}
 }
 
 function game:init()
+    love.window.setFullscreen(true)
+   
+    -- Work out scaling factor
+    min_edge = love.graphics.getHeight()
+    
+    if min_edge < love.graphics.getWidth() then
+        game.scaling = min_edge / 600
+        game.translate = {(love.graphics.getWidth() - (800 * game.scaling)) / 2, 0}
+    else
+        game.scaling = love.graphics.getWidth() / 800
+    end
+
+
     game.font = love.graphics.newFont( "assets/veramono.ttf", 12 )
     game.font:setFilter( "nearest", "nearest" )
 
     -- Load images
     game.conveyorSprites = love.graphics.newImage("assets/conveyor.png")
     game.entrySprites = love.graphics.newImage("assets/entry.png")
+
+    game.goalSprites = {
+        blue = love.graphics.newImage("assets/goal_blue.png"),
+        red = love.graphics.newImage("assets/goal_red.png"),
+        inactive = love.graphics.newImage("assets/goal_inactive.png")
+    }
 
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
     game.sprites[2] = love.graphics.newImage("assets/wall_top.png")
@@ -156,17 +194,32 @@ end
 function game:enter()
     love.graphics.setBackgroundColor(game.backgroundColor)
 
+    game.conveyors = {}
     table.insert(game.conveyors, Conveyor(3, 4, "south"))
-    table.insert(game.conveyors, Conveyor(4, 4, "south"))
-    table.insert(game.conveyors, Conveyor(5, 4, "south"))
-    table.insert(game.conveyors, Conveyor(6, 4, "south"))
-    table.insert(game.conveyors, Conveyor(7, 4, "south"))
-    table.insert(game.conveyors, Conveyor(8, 4, "south"))
+    table.insert(game.conveyors, Conveyor(3, 8, "south"))
+    table.insert(game.conveyors, Conveyor(3, 12, "south"))
+    table.insert(game.conveyors, Conveyor(3, 16, "south"))
+    table.insert(game.conveyors, Conveyor(3, 20, "south"))
 
+    -- Set all conveyors as "fixed"
+    for c=1,#game.conveyors,1 do
+        game.conveyors[c]:setFixed(true)
+    end
+
+    game.entries = {}
     table.insert(game.entries, Entry(2, 4, false, 2))
-    table.insert(game.goals, Goal(6, 22, true))
+    table.insert(game.entries, Entry(2, 8, false, 2))
+    table.insert(game.entries, Entry(2, 12, false, 2))
+    table.insert(game.entries, Entry(2, 16, false, 2))
+    table.insert(game.entries, Entry(2, 20, false, 2))
 
-    game.entries[1]:setActive(true)
+    game.goals = {}
+    table.insert(game.goals, Goal(5, 22, "red", false))
+    table.insert(game.goals, Goal(10, 22, "blue", false))
+    table.insert(game.goals, Goal(15, 22, "blue", false))
+
+    game.waveController = WaveController()
+    game.waveController:start()
 end
 
 function game:update(dt)
@@ -178,12 +231,18 @@ function game:update(dt)
         end
     end
 
+    game.waveController:update(dt)
+
     for e=1,#game.entries,1 do
         game.entries[e]:update(dt)
     end
     
     for c=1,#game.conveyors,1 do
         game.conveyors[c]:update(dt)
+    end
+
+    for g=1,#game.goals,1 do
+        game.goals[g]:update(dt)
     end
 end
 
@@ -194,7 +253,7 @@ function game:keyreleased(key)
 end
 
 function game:mousemoved(x, y)
-    pos = game.getGridPosition(x, y - game.translateY)
+    pos = game.getGridPosition((x - game.translate[1]) / game.scaling, (y - game.translateY * game.scaling - game.translate[2]) / game.scaling)
 
     if game.isConveyorPositionValid(pos.row, pos.col) then
         game.mouseOver = pos
@@ -222,7 +281,7 @@ function game:mousepressed()
     game.dragStart = game.mouseOver
 end
 
-function game:mousereleased()
+function game:mousereleased(x, y, button)
     if game.mouseOver ~= nil then
         -- If dragging then create that conveyor
         if game.dragStart ~= nil and (game.mouseOver.row ~= game.dragStart.row or game.mouseOver.col ~= game.dragStart.col) then
@@ -246,10 +305,13 @@ function game:mousereleased()
                 for row=begin,to,step do
                     -- Check if conveyor already there, if so remove
                     local conveyorIndex = game.getConveyorIndex(row, col)
-                    if conveyorIndex ~= nil then table.remove(game.conveyors, conveyorIndex) end
-
-                    table.insert(game.conveyors, Conveyor(row, col, direction))
-
+                    if conveyorIndex ~= nil and game.conveyors[conveyorIndex].fixed == false then 
+                        table.remove(game.conveyors, conveyorIndex) 
+                    end
+                    
+                    if button == 1 and game.isConveyorPositionValid(row, col) then
+                        table.insert(game.conveyors, Conveyor(row, col, direction))
+                    end
                 end
             else
                 direction = "east"
@@ -268,46 +330,61 @@ function game:mousereleased()
                 for col=begin,to,step do
                     -- Check if conveyor already there, if so remove
                     local conveyorIndex = game.getConveyorIndex(row, col)
-                    if conveyorIndex ~= nil then table.remove(game.conveyors, conveyorIndex) end
-
-                    table.insert(game.conveyors, Conveyor(row, col, direction))
-
+                    if conveyorIndex ~= nil and game.conveyors[conveyorIndex].fixed == false then 
+                        table.remove(game.conveyors, conveyorIndex) 
+                    end
+                    
+                    if button == 1 and game.isConveyorPositionValid(row, col) then
+                        table.insert(game.conveyors, Conveyor(row, col, direction))
+                    end
                 end
             end
         else
             -- Find if conveyor under mouse
             local conveyorIndex = game.getConveyorIndex(game.mouseOver.row, game.mouseOver.col)
+            
+            if conveyorIndex == nil or game.conveyors[conveyorIndex].fixed == false then
+                if button == 2 then
+                    if conveyorIndex ~= nil then
+                        table.remove(game.conveyors, conveyorIndex)
+                    end 
+                else
+                    if conveyorIndex == nil then
+                        table.insert(game.conveyors, Conveyor(game.mouseOver.row, game.mouseOver.col, game.lastConveyorDirection))
+                    else
+                        local conveyor = game.conveyors[conveyorIndex]
+                        local cycle = {"north", "east", "south", "west"}
 
-            if conveyorIndex == nil then
-                table.insert(game.conveyors, Conveyor(game.mouseOver.row, game.mouseOver.col, game.lastConveyorDirection))
-            else
-                local conveyor = game.conveyors[conveyorIndex]
-                local cycle = {"north", "east", "south", "west"}
-
-                for d=1,#cycle,1 do
-                    if cycle[d] == conveyor.direction then
-                        if d == #cycle then
-                            table.remove(game.conveyors, conveyorIndex)
-                            game.lastConveyorDirection = cycle[1]
-                        else
-                            conveyor.direction = cycle[d + 1]
-                            game.lastConveyorDirection = conveyor.direction 
-                        end
-                        break
+                        for d=1,#cycle,1 do
+                            if cycle[d] == conveyor.direction then
+                                if d == #cycle then
+                                    table.remove(game.conveyors, conveyorIndex)
+                                    game.lastConveyorDirection = cycle[1]
+                                else
+                                    conveyor.direction = cycle[d + 1]
+                                    game.lastConveyorDirection = conveyor.direction 
+                                end
+                                break
+                            end
+                        end 
                     end
-                end 
+                end
             end
         end
     end
-
     game.dragStart = nil
 end
 
 function game:draw()
+    -- Scale and move the window
+    love.graphics.translate(game.translate[1], game.translate[2])
+    love.graphics.scale(game.scaling)
+    
     love.graphics.setColor(255, 255, 255)
     love.graphics.setFont(game.font)
     love.graphics.print("Score: " .. game.score, 0, 0, 0, 2)
-    love.graphics.print("Mail Delivered: 0", 0, 26, 0, 2)
+    love.graphics.print("Lives: " .. game.lives, 0, 26, 0, 2)
+    love.graphics.printf("Wave: " .. game.waveController.wave, 0, 26, 400, "right", 0, 2)
 
     -- Shift game window down
     game.translateY = (600 - (game.gridHeight * 32))

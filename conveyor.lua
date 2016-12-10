@@ -8,12 +8,17 @@ local Conveyor = Class{
        self.timer = 0
        self.frame = 0
     end,
-    fps = 10
+    fps = 10,
+    fixed = false
 }
+
+function Conveyor:setFixed(fixed)
+    self.fixed = fixed
+end
 
 function Conveyor:draw()
     rotation = 0
-    ninety = 1.57
+    ninety = math.pi / 2
 
     if self.direction == "west" then
         rotation = ninety * 1
@@ -50,13 +55,13 @@ function Conveyor:getEndPoint()
     y = (self.row - 1) * 32
     
     if self.direction == "west" then
-        return {x = x - 1, y = y + 16}
+        return {x = x, y = y + 16}
     elseif self.direction == "east" then
-        return {x = x + 33, y = y + 16}
+        return {x = x + 32, y = y + 16}
     elseif self.direction == "north" then
-        return {x = x + 16, y = y - 1}
+        return {x = x + 16, y = y}
     elseif self.direction == "south" then
-        return {x = x + 16, y = y + 33}
+        return {x = x + 16, y = y + 32}
     end
 end
 

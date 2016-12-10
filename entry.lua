@@ -9,6 +9,7 @@ local Entry = Class{
         self.timer = rate
         self.frame = 0
         self.frames = 27
+        self.color = "red"
         if active then self.frame = self.frames end
     end,
     fps = 10,
@@ -24,12 +25,17 @@ function Entry:draw()
 end
 
 function Entry:setActive(active)
-    self.active = active
 
-    if active == true then
+    if self.active == false and active == true then
         self.timer = -3.2
         self.frame = 0
     end
+    
+    self.active = active
+end
+
+function Entry:setColor(color)
+    self.color = color
 end
 
 function Entry:getEntryPoint()
@@ -44,12 +50,15 @@ function Entry:update(dt)
         if self.timer > self.rate then
             self.timer = 0
 
-            local entryPoint = self:getEntryPoint()
+            -- Check if a package is needed
+            if game.waveController:scoreNeeded() - #game.packages > 0 then
+                local entryPoint = self:getEntryPoint()
 
-            -- Timer hit, so add a package
-            local package = Package(entryPoint.x, entryPoint.y)
+                -- Timer hit, so add a package
+                local package = Package(entryPoint.x, entryPoint.y, self.color)
 
-            table.insert(game.packages, package)
+                table.insert(game.packages, package)
+            end
         end
     end
 
