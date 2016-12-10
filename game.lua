@@ -218,31 +218,89 @@ function game.isConveyorPositionValid(row, col)
     return false
 end
 
+function game:mousepressed()
+    game.dragStart = game.mouseOver
+end
+
 function game:mousereleased()
     if game.mouseOver ~= nil then
-        -- Find if conveyor under mouse
-        local conveyorIndex = game.getConveyorIndex(game.mouseOver.row, game.mouseOver.col)
+        -- If dragging then create that conveyor
+        if game.dragStart ~= nil and (game.mouseOver.row ~= game.dragStart.row or game.mouseOver.col ~= game.dragStart.col) then
+            st = game.dragStart
+            en = game.mouseOver
 
-        if conveyorIndex == nil then
-            table.insert(game.conveyors, Conveyor(game.mouseOver.row, game.mouseOver.col, game.lastConveyorDirection))
-        else
-            local conveyor = game.conveyors[conveyorIndex]
-            local cycle = {"north", "east", "south", "west"}
+            if math.abs(st.row - en.row) > math.abs(st.col - en.col) then
+                direction = "south"
+                step = 1
 
-            for d=1,#cycle,1 do
-                if cycle[d] == conveyor.direction then
-                    if d == #cycle then
-                        table.remove(game.conveyors, conveyorIndex)
-                        game.lastConveyorDirection = cycle[1]
-                    else
-                        conveyor.direction = cycle[d + 1]
-                        game.lastConveyorDirection = conveyor.direction 
-                    end
-                    break
+                begin = st.row
+                to = en.row
+
+                if to < begin then
+                    step = -1
+                    direction = "north"
                 end
-            end 
+
+                col = st.col
+                
+                for row=begin,to,step do
+                    -- Check if conveyor already there, if so remove
+                    local conveyorIndex = game.getConveyorIndex(row, col)
+                    if conveyorIndex ~= nil then table.remove(game.conveyors, conveyorIndex) end
+
+                    table.insert(game.conveyors, Conveyor(row, col, direction))
+
+                end
+            else
+                direction = "east"
+                step = 1
+
+                begin = st.col
+                to = en.col
+
+                if to < begin then
+                    step = -1
+                    direction = "west"
+                end
+
+                row = st.row
+                
+                for col=begin,to,step do
+                    -- Check if conveyor already there, if so remove
+                    local conveyorIndex = game.getConveyorIndex(row, col)
+                    if conveyorIndex ~= nil then table.remove(game.conveyors, conveyorIndex) end
+
+                    table.insert(game.conveyors, Conveyor(row, col, direction))
+
+                end
+            end
+        else
+            -- Find if conveyor under mouse
+            local conveyorIndex = game.getConveyorIndex(game.mouseOver.row, game.mouseOver.col)
+
+            if conveyorIndex == nil then
+                table.insert(game.conveyors, Conveyor(game.mouseOver.row, game.mouseOver.col, game.lastConveyorDirection))
+            else
+                local conveyor = game.conveyors[conveyorIndex]
+                local cycle = {"north", "east", "south", "west"}
+
+                for d=1,#cycle,1 do
+                    if cycle[d] == conveyor.direction then
+                        if d == #cycle then
+                            table.remove(game.conveyors, conveyorIndex)
+                            game.lastConveyorDirection = cycle[1]
+                        else
+                            conveyor.direction = cycle[d + 1]
+                            game.lastConveyorDirection = conveyor.direction 
+                        end
+                        break
+                    end
+                end 
+            end
         end
     end
+
+    game.dragStart = nil
 end
 
 function game:draw()
@@ -301,8 +359,28 @@ function game:draw()
     -- Draw mouse box
     if game.mouseOver ~= nil then
         love.graphics.setColor(40,40, 40)
-
-        love.graphics.polygon("line", game.getQuad(game.mouseOver.row, game.mouseOver.col))
+        
+        if game.dragStart == nil or (game.dragStart.row == game.mouseOver.row and game.dragStart.col == game.mouseOver.col) then
+            love.graphics.polygon("line", game.getQuad(game.mouseOver.row, game.mouseOver.col))
+        else
+            -- Find if drag should be horizontal or vertical
+            startQuad = game.getQuad(game.dragStart.row, game.dragStart.col)
+            endQuad = game.getQuad(game.mouseOver.row, game.mouseOver.col)
+            
+            if math.abs(game.dragStart.row - game.mouseOver.row) > math.abs(game.dragStart.col - game.mouseOver.col) then
+                if game.dragStart.row > game.mouseOver.row then
+                    love.graphics.polygon("line", startQuad[1], endQuad[2], startQuad[3], endQuad[4], startQuad[5], startQuad[6], startQuad[7], startQuad[8])
+                else
+                    love.graphics.polygon("line", startQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], endQuad[6], startQuad[7], endQuad[8])
+                end
+            else
+                if game.dragStart.col > game.mouseOver.col then
+                    love.graphics.polygon("line", endQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], startQuad[6], endQuad[7], startQuad[8])
+                else
+                    love.graphics.polygon("line", startQuad[1], startQuad[2], endQuad[3], startQuad[4], endQuad[5], startQuad[6], startQuad[7], startQuad[8])
+                end
+            end
+        end
     end
 end
 
