@@ -100,7 +100,7 @@ game = {
     tileSize = 32,
     layer1 = {
         2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,
-        3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,0,0,
+        3,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,3,0,0,
         4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
         4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
         4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,0,0,
@@ -145,6 +145,8 @@ function game:init()
     game.entrySprites = love.graphics.newImage("assets/entry.png")
 
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
+    game.sprites[2] = love.graphics.newImage("assets/wall_top.png")
+    game.sprites[7] = love.graphics.newImage("assets/wall_bottom.png")
 end
 
 function game:enter()
@@ -157,10 +159,10 @@ function game:enter()
     table.insert(game.conveyors, Conveyor(7, 4, "south"))
     table.insert(game.conveyors, Conveyor(8, 4, "south"))
 
-    table.insert(game.entries, Entry(2, 4, true, 2))
+    table.insert(game.entries, Entry(2, 4, false, 2))
     table.insert(game.goals, Goal(6, 22, true))
 
-    game.entries[1]:setActive(false)
+    game.entries[1]:setActive(true)
 end
 
 function game:update(dt)
@@ -264,6 +266,7 @@ function game:draw()
 
                     love.graphics.polygon("fill", game.getQuad(r, c))
                 else
+                    love.graphics.setColor(255, 255, 255)
                     love.graphics.draw(game.sprites[block], game.getQuad(r, c)[1], game.getQuad(r, c)[2])
                 end
             end
@@ -293,7 +296,7 @@ function game:draw()
 
     -- Draw mouse box
     if game.mouseOver ~= nil then
-        love.graphics.setColor(200, 200, 200)
+        love.graphics.setColor(40,40, 40)
 
         love.graphics.polygon("line", game.getQuad(game.mouseOver.row, game.mouseOver.col))
     end

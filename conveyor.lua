@@ -5,21 +5,43 @@ local Conveyor = Class{
        self.row = row
        self.col = col
        self.direction = direction
-    end
+       self.timer = 0
+       self.frame = 0
+    end,
+    fps = 10
 }
 
 function Conveyor:draw()
+    rotation = 0
+    ninety = 1.57
+
     if self.direction == "west" then
-        love.graphics.setColor(120, 30, 30)
+        rotation = ninety * 1
     elseif self.direction == "east" then
-        love.graphics.setColor(30, 120, 30)
+        rotation = ninety * 3
     elseif self.direction == "north" then
-        love.graphics.setColor(30, 30, 120)
-    elseif self.direction == "south" then
-        love.graphics.setColor(120, 120, 30)
+        rotation = ninety * 2
     end
 
-    love.graphics.polygon("fill", game.getQuad(self.row, self.col)) 
+
+    
+    love.graphics.setColorMask()
+    love.graphics.setColor(255, 255, 255)
+    pos = game.getQuad(self.row, self.col)
+    quad = love.graphics.newQuad(self.frame * 32, 0, 32, 32, game.conveyorSprites:getWidth(), game.conveyorSprites:getHeight())
+    love.graphics.draw(game.conveyorSprites, quad, pos[1] + 16, pos[2] + 16, rotation, 1, 1, 16, 16)
+    --love.graphics.polygon("fill", game.getQuad(self.row, self.col)) 
+end
+
+function Conveyor:update(dt)
+    self.timer = self.timer + dt
+
+    if self.timer > 1 / self.fps then
+        self.frame = self.frame + 1
+
+        if self.frame > 4 then self.frame = 0 end
+        self.timer = 0 
+    end
 end
 
 function Conveyor:getEndPoint()
