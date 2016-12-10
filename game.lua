@@ -95,10 +95,13 @@ function Package:move(dt, index)
         self.y = self.y + movement.y 
 
         -- Check if package is near
-        --[[if game.isPackageNear(index, self.x, self.y) then]]
-            --self.x = self.x - movement.x
-            --self.y = self.y - movement.y
-        --[[end]]
+        local test_x = self.x
+        local test_y = self.y
+
+        if game.isSquareEmpty(index, self.x, self.y) == false then
+           self.x = self.x - movement.x
+           self.y = self.y - movement.y
+        end
 
         goal = self:getGoal()
         if goal ~= nil and goal.active == false then
@@ -522,10 +525,26 @@ function game.isPackageNear(package, x, y)
             y2 = game.packages[p].y
 
             dist = math.sqrt((x - x2) ^ 2 + (y - y2) ^ 2)
-            if dist < 15 then
+            if dist < 14 then
                 return true
             end
         end
     end
     return false
+end
+
+function game.isSquareEmpty(exclude_package, x, y)
+    local pos = game.getGridPosition(x, y)
+
+    for p=1,#game.packages,1 do
+        if p ~= exclude_package then
+            local pos2 = game.getGridPosition(game.packages[p].x, game.packages[p].y)
+
+            if pos.col == pos2.col and pos.row == pos2.row then
+                return false
+            end
+        end
+    end
+
+    return true
 end
