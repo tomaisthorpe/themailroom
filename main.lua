@@ -1,6 +1,7 @@
 Gamestate = require "hump.gamestate"
 
 require "game"
+require "menu"
 
 function love.load()
     Gamestate.registerEvents()

@@ -177,7 +177,6 @@ function game:init()
         game.scaling = love.graphics.getWidth() / 800
     end
 
-
     game.font = love.graphics.newFont( "assets/veramono.ttf", 12 )
     game.font:setFilter( "nearest", "nearest" )
 
