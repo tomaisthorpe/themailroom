@@ -5,7 +5,7 @@ require "menu"
 
 function love.load()
     Gamestate.registerEvents()
-    Gamestate.switch(game)
+    Gamestate.switch(menu)
 end
 
 function setupWindow()

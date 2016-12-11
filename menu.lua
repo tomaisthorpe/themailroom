@@ -8,7 +8,7 @@ menu = {
 
 function menu:init()
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.window.setFullscreen(false)
+    love.window.setFullscreen(true)
    
     -- Work out scaling factor
     min_edge = love.graphics.getHeight()
@@ -35,5 +35,5 @@ end
 function menu:draw()
     love.graphics.translate(menu.translate[1], menu.translate[2])
     love.graphics.scale(menu.scaling)
-    love.graphics.draw(menu.image, 0, 0, 0, 2)
+    love.graphics.draw(menu.image, 0, 0, 0, 1)
 end

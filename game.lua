@@ -137,10 +137,16 @@ function Package:move(dt, index)
             self.delivered = true
             if goal.color ~= self.color then
                 game.lives = game.lives - 1
-                game.wrongSound:play()
+
+                if game.muted == false then
+                    game.wrongSound:play()
+                end
             else
                 game.score = game.score + 1
-                game.deliveredSound:play()
+
+                if game.muted == false then
+                    game.deliveredSound:play()
+                end
             end
         end
 
@@ -199,7 +205,7 @@ game = {
     mouseOver=nil, -- Set to non-nil if over editable grid square
     score = 0,
     waveController = nil,
-    lives = 10,
+    lives = 5,
     scaling = 1,
     sprites = {},
     paused = false,
@@ -207,6 +213,7 @@ game = {
     waveMessage = "Wave 1",
     waveOpacity = 700,
     waveOpacityStart = 700,
+    muted = false,
 }
 
 function game:init()
@@ -261,6 +268,10 @@ function game:init()
     game.sprites[13] = love.graphics.newImage("assets/goal_box_active.png")
     game.sprites[14] = love.graphics.newImage("assets/goal_box_wire.png")
 
+    game.detailSprites = {
+        clipboard = love.graphics.newImage("assets/clipboard.png"),
+    }
+
     game.packageSprites = {}
     game.packageSprites[1] = love.graphics.newImage("assets/package.png")
     game.packageSprites[2] = love.graphics.newImage("assets/package_2.png")
@@ -268,6 +279,11 @@ function game:init()
 
     game.heartSprite = love.graphics.newImage("assets/heart.png")
 
+
+    game.speakerSprites = {
+        normal = love.graphics.newImage("assets/speaker.png"),
+        muted = love.graphics.newImage("assets/speaker_muted.png"),
+    }
     game.deliveredSound = love.audio.newSource("assets/delivered.wav", "static")
     game.wrongSound = love.audio.newSource("assets/wrong.wav", "static")
 end
@@ -278,7 +294,7 @@ function game:enter()
     
     game.packages = {}
     game.score = 0
-    game.lives = 10
+    game.lives = 5
     game.paused = false
     game.gameOver = false
 
@@ -392,6 +408,22 @@ function game:mousepressed()
 end
 
 function game:mousereleased(x, y, button)
+    local scaled_x = (x - game.translate[1]) / game.scaling
+    local scaled_y = (y - game.translate[2]) / game.scaling
+
+    print(scaled_x, scaled_y)
+
+    -- Check if mute button was clicked
+    if scaled_y < 32 and scaled_x > 800 - 32 and scaled_x < 800 then
+        if game.muted  == true then
+            game.muted = false
+        else
+            game.muted = true
+        end
+        
+        return nil
+    end
+    
     if game.mouseOver ~= nil then
         -- If dragging then create that conveyor
         if game.dragStart ~= nil and (game.mouseOver.row ~= game.dragStart.row or game.mouseOver.col ~= game.dragStart.col) then
@@ -515,6 +547,12 @@ function game:draw()
     --love.graphics.print("Lives: " .. game.lives, 0, 26, 0, 2)
     love.graphics.printf("Wave: " .. game.waveController.wave, 0, 28, 736 / 2, "right", 0, 2)
 
+    if game.muted then
+        love.graphics.draw(game.speakerSprites.muted, 800 - 32, 0)
+    else
+        love.graphics.draw(game.speakerSprites.normal, 800 - 32, 0)
+    end
+
     -- Draw hearts for lives
     local current_x = 6
     for l=1,game.lives,1 do
@@ -547,6 +585,10 @@ function game:draw()
             
         end
     end
+
+    -- Draw extra details
+    local billboardPos = game.gridToXY(1, 22)
+    love.graphics.draw(game.detailSprites.clipboard, billboardPos.x, billboardPos.y)
 
     -- Draw entries
     for e=1,#game.entries,1 do
