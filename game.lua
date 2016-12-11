@@ -389,6 +389,8 @@ function game:mousemoved(x, y)
 end
 
 function game.isConveyorPositionValid(row, col)
+    if col > 25 or col < 0 or row < 0 or row > 18 then return false end
+    
     if game.layer1[game.getId(row, col)] == 1 then
         -- Ensure no goal points
         for g=1,#game.goals,1 do
@@ -403,15 +405,15 @@ function game.isConveyorPositionValid(row, col)
     return false
 end
 
-function game:mousepressed()
+function game:mousepressed(x, y, button)
     game.dragStart = game.mouseOver
+    game.dragButton = button
 end
 
 function game:mousereleased(x, y, button)
     local scaled_x = (x - game.translate[1]) / game.scaling
     local scaled_y = (y - game.translate[2]) / game.scaling
 
-    print(scaled_x, scaled_y)
 
     -- Check if mute button was clicked
     if scaled_y < 32 and scaled_x > 800 - 32 and scaled_x < 800 then
@@ -427,67 +429,96 @@ function game:mousereleased(x, y, button)
     if game.mouseOver ~= nil then
         -- If dragging then create that conveyor
         if game.dragStart ~= nil and (game.mouseOver.row ~= game.dragStart.row or game.mouseOver.col ~= game.dragStart.col) then
-            st = game.dragStart
-            en = game.mouseOver
+            if button == 2 then
+                local minCol = game.dragStart.col
+                local maxCol = game.mouseOver.col
 
-            if math.abs(st.row - en.row) > math.abs(st.col - en.col) then
-                direction = "south"
-                step = 1
+                if maxCol < minCol then
+                    local tmpCol = maxCol
+                    maxCol = minCol
+                    minCol = tmpCol
+                end
+                
+                local minRow = game.dragStart.row
+                local maxRow = game.mouseOver.row
 
-                begin = st.row
-                to = en.row
-
-                if to < begin then
-                    step = -1
-                    direction = "north"
+                if maxRow < minRow then
+                    local tmpRow = maxRow
+                    maxRow = minRow
+                    minRow = tmpRow
                 end
 
-                col = st.col
-                
-                for row=begin,to,step do
-                    -- Check if conveyor already there, if so remove
-                    local conveyorIndex = game.getConveyorIndex(row, col)
-                    local fixedConveyor = false
-                    if conveyorIndex ~= nil then
-                        if game.conveyors[conveyorIndex].fixed == false then 
-                            table.remove(game.conveyors, conveyorIndex) 
-                        else
-                            fixedConveyor = true
+                -- Delete anything in the given range
+                for c=#game.conveyors,1,-1 do
+                    if game.conveyors[c].row >= minRow and game.conveyors[c].row <= maxRow
+                        and game.conveyors[c].col >= minCol and game.conveyors[c].col <= maxCol 
+                        and game.conveyors[c].fixed == false then
+                        table.remove(game.conveyors, c)
+                    end
+                end
+            elseif button == 1 then 
+                st = game.dragStart
+                en = game.mouseOver
+
+                if math.abs(st.row - en.row) > math.abs(st.col - en.col) then
+                    direction = "south"
+                    step = 1
+
+                    begin = st.row
+                    to = en.row
+
+                    if to < begin then
+                        step = -1
+                        direction = "north"
+                    end
+
+                    col = st.col
+                    
+                    for row=begin,to,step do
+                        -- Check if conveyor already there, if so remove
+                        local conveyorIndex = game.getConveyorIndex(row, col)
+                        local fixedConveyor = false
+                        if conveyorIndex ~= nil then
+                            if game.conveyors[conveyorIndex].fixed == false then 
+                                table.remove(game.conveyors, conveyorIndex) 
+                            else
+                                fixedConveyor = true
+                            end
+                        end
+                        
+                        if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
+                            table.insert(game.conveyors, Conveyor(row, col, direction))
                         end
                     end
-                    
-                    if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
-                        table.insert(game.conveyors, Conveyor(row, col, direction))
+                else
+                    direction = "east"
+                    step = 1
+
+                    begin = st.col
+                    to = en.col
+
+                    if to < begin then
+                        step = -1
+                        direction = "west"
                     end
-                end
-            else
-                direction = "east"
-                step = 1
 
-                begin = st.col
-                to = en.col
-
-                if to < begin then
-                    step = -1
-                    direction = "west"
-                end
-
-                row = st.row
-                
-                for col=begin,to,step do
-                    -- Check if conveyor already there, if so remove
-                    local conveyorIndex = game.getConveyorIndex(row, col)
-                    local fixedConveyor = false
-                    if conveyorIndex ~= nil then
-                        if game.conveyors[conveyorIndex].fixed == false then 
-                            table.remove(game.conveyors, conveyorIndex) 
-                        else
-                            fixedConveyor = true
+                    row = st.row
+                    
+                    for col=begin,to,step do
+                        -- Check if conveyor already there, if so remove
+                        local conveyorIndex = game.getConveyorIndex(row, col)
+                        local fixedConveyor = false
+                        if conveyorIndex ~= nil then
+                            if game.conveyors[conveyorIndex].fixed == false then 
+                                table.remove(game.conveyors, conveyorIndex) 
+                            else
+                                fixedConveyor = true
+                            end
                         end
-                    end
-                    
-                    if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
-                        table.insert(game.conveyors, Conveyor(row, col, direction))
+                        
+                        if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
+                            table.insert(game.conveyors, Conveyor(row, col, direction))
+                        end
                     end
                 end
             end
@@ -622,21 +653,46 @@ function game:draw()
             endQuad = game.getQuad(game.mouseOver.row, game.mouseOver.col)
             
             local quad = nil
-            if math.abs(game.dragStart.row - game.mouseOver.row) > math.abs(game.dragStart.col - game.mouseOver.col) then
-                if game.dragStart.row > game.mouseOver.row then
-                    quad = {startQuad[1], endQuad[2], startQuad[3], endQuad[4], startQuad[5], startQuad[6], startQuad[7], startQuad[8]}
-            
+            if game.dragButton == 1 then
+                if math.abs(game.dragStart.row - game.mouseOver.row) > math.abs(game.dragStart.col - game.mouseOver.col) then
+                    if game.dragStart.row > game.mouseOver.row then
+                        quad = {startQuad[1], endQuad[2], startQuad[3], endQuad[4], startQuad[5], startQuad[6], startQuad[7], startQuad[8]}
+                
+                    else
+                        quad = {startQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], endQuad[6], startQuad[7], endQuad[8]}
+                    end
                 else
-                    quad = {startQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], endQuad[6], startQuad[7], endQuad[8]}
+                    if game.dragStart.col > game.mouseOver.col then
+                        quad = {endQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], startQuad[6], endQuad[7], startQuad[8]}
+                    else
+                        quad = {startQuad[1], startQuad[2], endQuad[3], startQuad[4], endQuad[5], startQuad[6], startQuad[7], startQuad[8]}
+                    end
                 end
-            else
-                if game.dragStart.col > game.mouseOver.col then
-                    quad = {endQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], startQuad[6], endQuad[7], startQuad[8]}
-                else
-                    quad = {startQuad[1], startQuad[2], endQuad[3], startQuad[4], endQuad[5], startQuad[6], startQuad[7], startQuad[8]}
-                end
-            end
+            elseif game.dragButton == 2 then
+                -- Get max and min row and column
+                local minCol = game.dragStart.col
+                local maxCol = game.mouseOver.col
 
+                if maxCol < minCol then
+                    local tmpCol = maxCol
+                    maxCol = minCol
+                    minCol = tmpCol
+                end
+                
+                local minRow = game.dragStart.row
+                local maxRow = game.mouseOver.row
+
+                if maxRow < minRow then
+                    local tmpRow = maxRow
+                    maxRow = minRow
+                    minRow = tmpRow
+                end
+
+                local minQuad = game.getQuad(minRow, minCol)
+                local maxQuad = game.getQuad(maxRow, maxCol)
+            
+                quad = {minQuad[1], minQuad[2], maxQuad[3], minQuad[2], maxQuad[5], maxQuad[6], minQuad[1], maxQuad[6]}
+            end
             game.drawMouseBox(quad)
         end
     end
