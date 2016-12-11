@@ -12,6 +12,7 @@ Package = Class{
        self.y = y
        self.color = color
        self.sprite = love.math.random(#game.packageSprites)
+       self.offset = love.math.random(12) - 6
     end,
     size=16,
     delivered=false,
@@ -96,6 +97,12 @@ function Package:move(dt, index)
         if conveyor ~= nil then
 
             local dest = conveyor:getEndPoint()
+           
+            if conveyor.direction == "west" or conveyor.direction == "east" then
+                dest.y = dest.y + self.offset
+            else
+                dest.x = dest.x + self.offset
+            end
 
             -- Create vector from current x,y to goal:0
             local direction = vector(dest.x - self.x, dest.y - self.y)
@@ -174,12 +181,14 @@ game = {
     waveController = nil,
     lives = 5,
     scaling = 1,
-    sprites = {}
+    sprites = {},
+    paused = false,
+    gameOver = false,
 }
 
 function game:init()
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.window.setFullscreen(true)
+    love.window.setFullscreen(false)
    
     -- Work out scaling factor
     min_edge = love.graphics.getHeight()
@@ -220,12 +229,18 @@ function game:init()
     game.packageSprites = {}
     game.packageSprites[1] = love.graphics.newImage("assets/package.png")
     game.packageSprites[2] = love.graphics.newImage("assets/package_2.png")
-    game.packageSprites[3] = love.graphics.newImage("assets/package_3.png")
+    --game.packageSprites[3] = love.graphics.newImage("assets/package_3.png")
 end
 
 function game:enter()
     love.graphics.setBackgroundColor(game.backgroundColor)
     love.graphics.setDefaultFilter("nearest", "nearest")
+    
+    game.packages = {}
+    game.score = 0
+    game.lives = 5
+    game.paused = false
+    game.gameOver = false
 
     game.conveyors = {}
     table.insert(game.conveyors, Conveyor(3, 4, "south"))
@@ -253,35 +268,53 @@ function game:enter()
 
     game.waveController = WaveController()
     game.waveController:start()
+
 end
 
 function game:update(dt)
-    for p=#game.packages,1,-1 do 
-        game.packages[p]:move(dt, p)
 
-        if game.packages[p].shouldDelete then
-            table.remove(game.packages, p)
+    if game.paused == false then
+        if game.lives < 1 then
+            game.doGameOver()
         end
-    end
 
-    game.waveController:update(dt)
+        for p=#game.packages,1,-1 do 
+            game.packages[p]:move(dt, p)
 
-    for e=1,#game.entries,1 do
-        game.entries[e]:update(dt)
-    end
-    
-    for c=1,#game.conveyors,1 do
-        game.conveyors[c]:update(dt)
-    end
+            if game.packages[p].shouldDelete then
+                table.remove(game.packages, p)
+            end
+        end
 
-    for g=1,#game.goals,1 do
-        game.goals[g]:update(dt)
+        game.waveController:update(dt)
+
+        for e=1,#game.entries,1 do
+            game.entries[e]:update(dt)
+        end
+        
+        for c=1,#game.conveyors,1 do
+            game.conveyors[c]:update(dt)
+        end
+
+        for g=1,#game.goals,1 do
+            game.goals[g]:update(dt)
+        end
+
     end
+end
+
+function game.doGameOver()
+    game.paused = true
+    game.gameOver = true
 end
 
 function game:keyreleased(key)
     if key == "escape" then
         love.event.quit()
+    end
+
+    if game.gameOver and key == "space" then
+        Gamestate.switch(game)
     end
 end
 
@@ -491,6 +524,16 @@ function game:draw()
                 end
             end
         end
+    end
+
+    if game.gameOver then
+        love.graphics.setColor(50, 50, 50)
+        love.graphics.printf("Game over!", 0, 203, 800/3, "center", 0, 3)
+        love.graphics.printf("Press to space to restart.", 0, 253, 800/1.5, "center", 0, 1.5)
+        
+        love.graphics.setColor(255, 255, 255)
+        love.graphics.printf("Game over!", 0, 200, 800/3, "center", 0, 3)
+        love.graphics.printf("Press to space to restart.", 0, 250, 800/1.5, "center", 0, 1.5)
     end
 end
 

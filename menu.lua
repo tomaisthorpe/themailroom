@@ -8,7 +8,7 @@ menu = {
 
 function menu:init()
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.window.setFullscreen(true)
+    love.window.setFullscreen(false)
    
     -- Work out scaling factor
     min_edge = love.graphics.getHeight()
