@@ -133,8 +133,10 @@ function Package:move(dt, index)
             self.delivered = true
             if goal.color ~= self.color then
                 game.lives = game.lives - 1
+                game.wrongSound:play()
             else
                 game.score = game.score + 1
+                game.deliveredSound:play()
             end
         end
     end
@@ -172,7 +174,7 @@ game = {
     gameTranslateY = 0, -- Needed for mouseOver calculation
     wallColor = {100, 100, 100},
     floorColor = {150, 150, 150},
-    backgroundColor = {10, 10, 10},
+    backgroundColor = {0, 39, 59},
     borderColor = {130, 130, 130},
     entries={},
     goals={},
@@ -188,7 +190,7 @@ game = {
 
 function game:init()
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.window.setFullscreen(false)
+    love.window.setFullscreen(true)
    
     -- Work out scaling factor
     min_edge = love.graphics.getHeight()
@@ -230,6 +232,11 @@ function game:init()
     game.packageSprites[1] = love.graphics.newImage("assets/package.png")
     game.packageSprites[2] = love.graphics.newImage("assets/package_2.png")
     --game.packageSprites[3] = love.graphics.newImage("assets/package_3.png")
+
+    game.heartSprite = love.graphics.newImage("assets/heart.png")
+
+    game.deliveredSound = love.audio.newSource("assets/delivered.wav", "static")
+    game.wrongSound = love.audio.newSource("assets/wrong.wav", "static")
 end
 
 function game:enter()
@@ -448,10 +455,16 @@ function game:draw()
     
     love.graphics.setColor(255, 255, 255)
     love.graphics.setFont(game.font)
-    love.graphics.print("Score: " .. game.score, 0, 0, 0, 2)
-    love.graphics.print("Lives: " .. game.lives, 0, 26, 0, 2)
-    love.graphics.printf("Wave: " .. game.waveController.wave, 0, 26, 400, "right", 0, 2)
+    love.graphics.print("Score: " .. game.score, 5, 5, 0, 2)
+    --love.graphics.print("Lives: " .. game.lives, 0, 26, 0, 2)
+    love.graphics.printf("Wave: " .. game.waveController.wave, 0, 28, 736 / 2, "right", 0, 2)
 
+    -- Draw hearts for lives
+    local current_x = 6
+    for l=1,game.lives,1 do
+        love.graphics.draw(game.heartSprite, current_x, 32)
+        current_x = current_x + 22
+    end
     -- Shift game window down
     game.translateY = (600 - (game.gridHeight * 32))
     love.graphics.translate(0, game.translateY)

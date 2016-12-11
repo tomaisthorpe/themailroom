@@ -47,7 +47,10 @@ function Entry:update(dt)
     self.timer = self.timer + dt
 
     if self.active and self.frame == self.frames then
-        if self.timer > self.rate then
+        -- Rate offset
+        local offset = love.math.random() * 3 - 1
+
+        if self.timer > self.rate + offset then
             self.timer = 0
 
             local entryPoint = self:getEntryPoint()

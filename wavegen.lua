@@ -2,7 +2,7 @@ Class = require "hump.class"
 
 local WaveController = Class{
     init = function(self)
-        self.wave = 1 -- Automatically increases to 1 on start
+        self.wave = 0 -- Automatically increases to 1 on start
         self.running = false
     end,
     timeline = {}
