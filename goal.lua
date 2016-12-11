@@ -11,7 +11,8 @@ local Goal = Class{
         self.frameActive = 0
         self.timerActive = 0
     end,
-    fps = 10
+    fps = 32,
+    activeFps = 10
 }
 
 function Goal:setActive(active)
@@ -42,13 +43,15 @@ function Goal:update(dt)
             self.timer = 0
         end
         
-        if self.timerActive > 1 / self.fps then 
+        if self.timerActive > 1 / self.activeFps then 
             self.frameActive = self.frameActive + 1
 
             if self.frameActive > 5 then self.frameActive = 0 end
             self.timerActive = 0
         end
     end
+
+    self.fps = 32 * (game.conveyorSpeed / 32)
 end
 
 function Goal:draw()

@@ -8,7 +8,7 @@ local Conveyor = Class{
        self.timer = 0
        self.frame = 0
     end,
-    fps = 10,
+    fps = 32,
     fixed = false
 }
 
@@ -47,6 +47,8 @@ function Conveyor:update(dt)
         if self.frame > 4 then self.frame = 0 end
         self.timer = 0 
     end
+
+    self.fps = 32 * (game.conveyorSpeed / 32) 
 end
 
 function Conveyor:getEndPoint()

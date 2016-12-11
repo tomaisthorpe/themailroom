@@ -415,11 +415,16 @@ function game:mousereleased(x, y, button)
                 for row=begin,to,step do
                     -- Check if conveyor already there, if so remove
                     local conveyorIndex = game.getConveyorIndex(row, col)
-                    if conveyorIndex ~= nil and game.conveyors[conveyorIndex].fixed == false then 
-                        table.remove(game.conveyors, conveyorIndex) 
+                    local fixedConveyor = false
+                    if conveyorIndex ~= nil then
+                        if game.conveyors[conveyorIndex].fixed == false then 
+                            table.remove(game.conveyors, conveyorIndex) 
+                        else
+                            fixedConveyor = true
+                        end
                     end
                     
-                    if button == 1 and game.isConveyorPositionValid(row, col) then
+                    if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
                         table.insert(game.conveyors, Conveyor(row, col, direction))
                     end
                 end
@@ -440,11 +445,16 @@ function game:mousereleased(x, y, button)
                 for col=begin,to,step do
                     -- Check if conveyor already there, if so remove
                     local conveyorIndex = game.getConveyorIndex(row, col)
-                    if conveyorIndex ~= nil and game.conveyors[conveyorIndex].fixed == false then 
-                        table.remove(game.conveyors, conveyorIndex) 
+                    local fixedConveyor = false
+                    if conveyorIndex ~= nil then
+                        if game.conveyors[conveyorIndex].fixed == false then 
+                            table.remove(game.conveyors, conveyorIndex) 
+                        else
+                            fixedConveyor = true
+                        end
                     end
                     
-                    if button == 1 and game.isConveyorPositionValid(row, col) then
+                    if button == 1 and game.isConveyorPositionValid(row, col) and fixedConveyor == false then
                         table.insert(game.conveyors, Conveyor(row, col, direction))
                     end
                 end

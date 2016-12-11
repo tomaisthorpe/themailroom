@@ -29,7 +29,13 @@ function WaveController:generateTimeline()
     for e=1,num_events, 1 do
         -- Choose which entries are open at this event
        
-        local num_entries = love.math.random(2, 4)
+        local max_entries = math.floor(4 + self.wave * 0.25)
+        if max_entries > 5 then max_entries = 5 end
+
+        local min_entries = math.floor(2 + self.wave * 0.5)
+        if min_entries > 3 then min_entries = 3 end
+
+        local num_entries = love.math.random(3, max_entries)
        
         if self.wave == 1 then
             num_entries = 1
@@ -54,12 +60,32 @@ function WaveController:generateTimeline()
             end
         end
 
+        -- Generate conveyor speed
+        local conveyorSpeed = 32
+
+        if self.wave > 1 then 
+            local max_speed = math.floor(32 + self.wave * 6.4)
+            local min_speed = math.floor(32 + self.wave * 3.2)
+
+            conveyorSpeed = love.math.random(min_speed, max_speed) 
+        end
+
         -- Packages until end of event
         local max_until = 10 + (self.wave - 1) * 5
-        if max_until > 20 then max_until = 20 end
+        if max_until > 40 then max_until = 40 end
+
+        local min_until = 10
+
+        if self.wave > 2 then
+            min_until = math.floor(10 + self.wave * 2)
+
+            if min_until > 20 then
+                min_until = 20
+            end
+        end
         local until_next = love.math.random(10, max_until)
         
-        table.insert(self.timeline, {until_next = until_next, entries = chosen_entries})
+        table.insert(self.timeline, {until_next = until_next, entries = chosen_entries, conveyorSpeed = conveyorSpeed})
 
     end
 end
@@ -92,6 +118,8 @@ function WaveController:update(dt)
 
         local has_blue = false
         local has_red = false
+
+        game.conveyorSpeed = next_event.conveyorSpeed
 
         -- Activate/De-activate entries
         for e=1,#game.entries,1 do
