@@ -79,6 +79,9 @@ function WaveController:update(dt)
             
             self:generateTimeline()
             self:start()
+
+            game.waveMessage = "Wave " .. self.wave
+            game.waveOpacity = game.waveOpacityStart
         end
 
         next_event = self.timeline[#self.timeline]

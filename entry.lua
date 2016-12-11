@@ -55,11 +55,8 @@ function Entry:update(dt)
 
             local entryPoint = self:getEntryPoint()
 
-            print(game.isSquareEmpty(0, self.row + 1, self.col))
             -- Check if a package is needed
             local xy = game.gridToXY(self.row + 2, self.col + 1)
-            print(self.row)
-            print(self.col)
             if game.waveController:scoreNeeded() - #game.packages > 0 and game.isSquareEmpty(0, xy.x, xy.y) == true then
 
                 -- Timer hit, so add a package

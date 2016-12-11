@@ -203,6 +203,9 @@ game = {
     sprites = {},
     paused = false,
     gameOver = false,
+    waveMessage = "Wave 1",
+    waveOpacity = 700,
+    waveOpacityStart = 700,
 }
 
 function game:init()
@@ -231,6 +234,13 @@ function game:init()
         red = love.graphics.newImage("assets/goal_red.png"),
         inactive = love.graphics.newImage("assets/goal_inactive.png")
     }
+
+    game.goalBoxSprites = {
+        blue = love.graphics.newImage("assets/goal_box_active_blue.png"),
+        red = love.graphics.newImage("assets/goal_box_active_red.png"),
+        inactive = love.graphics.newImage("assets/goal_box_inactive.png"),
+        wire = love.graphics.newImage("assets/goal_box_wire.png"),
+    }  
 
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
     game.sprites[2] = love.graphics.newImage("assets/wall_top.png")
@@ -323,7 +333,11 @@ function game:update(dt)
         for g=1,#game.goals,1 do
             game.goals[g]:update(dt)
         end
-
+        
+        game.waveOpacity = game.waveOpacity - 500 * dt
+        if game.waveOpacity < 0 then
+            game.waveOpacity = 0
+        end
     end
 end
 
@@ -564,6 +578,14 @@ function game:draw()
         love.graphics.setColor(255, 255, 255)
         love.graphics.printf("Game over!", 0, 200, 800/3, "center", 0, 3)
         love.graphics.printf("Press to space to restart.", 0, 250, 800/1.5, "center", 0, 1.5)
+    end
+
+    if game.waveOpacity > 0 then
+        love.graphics.setColor(50, 50, 50, game.waveOpacity)
+        love.graphics.printf(game.waveMessage, 0, 203, 800/3, "center", 0, 3)
+        
+        love.graphics.setColor(255, 255, 255, game.waveOpacity)
+        love.graphics.printf(game.waveMessage, 0, 200, 800/3, "center", 0, 3)
     end
 end
 
