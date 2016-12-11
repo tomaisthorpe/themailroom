@@ -40,7 +40,7 @@ end
 
 function Entry:getEntryPoint()
     local pos = game.gridToXY(self.row, self.col)
-    return {x = pos.x + 16, y = pos.y + 33}
+    return {x = pos.x + 16, y = pos.y + 34}
 end
 
 function Entry:update(dt)
@@ -55,8 +55,12 @@ function Entry:update(dt)
 
             local entryPoint = self:getEntryPoint()
 
+            print(game.isSquareEmpty(0, self.row + 1, self.col))
             -- Check if a package is needed
-            if game.waveController:scoreNeeded() - #game.packages > 0 and game.isPackageNear(0, entryPoint.x, entryPoint.y) == false then
+            local xy = game.gridToXY(self.row + 2, self.col + 1)
+            print(self.row)
+            print(self.col)
+            if game.waveController:scoreNeeded() - #game.packages > 0 and game.isSquareEmpty(0, xy.x, xy.y) == true then
 
                 -- Timer hit, so add a package
                 local package = Package(entryPoint.x, entryPoint.y, self.color)

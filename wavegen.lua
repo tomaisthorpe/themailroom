@@ -17,19 +17,31 @@ end
 function WaveController:generateTimeline()
     -- First decide which entries should be open
     
-    local num_events = 3
+    local max_events = math.floor(3 + (self.wave - 1) * 0.5)
+    if max_events > 5 then max_events = 5 end
+
+    local num_events = love.math.random(3, max_events)
+
+    if self.wave == 1 then
+        num_events = 1
+    end
 
     for e=1,num_events, 1 do
         -- Choose which entries are open at this event
-        
-        local num_entries = love.math.random(1, 3)
-        
+       
+        local num_entries = love.math.random(2, 4)
+       
+        if self.wave == 1 then
+            num_entries = 1
+        end
+
         local chosen_entries = {}
         
         local try_again = false
         for i=1,num_entries,1 do
-            entry = love.math.random(1, #game.entries)
-            
+            local entry = love.math.random(1, #game.entries)
+            try_again = false
+
             -- Make sure not already in chosen
             for j=1,#chosen_entries,1 do
                 if chosen_entries[j] == entry then
@@ -43,8 +55,10 @@ function WaveController:generateTimeline()
         end
 
         -- Packages until end of event
-        local until_next = love.math.random(10, 20)
-        until_next = 5
+        local max_until = 10 + (self.wave - 1) * 5
+        if max_until > 20 then max_until = 20 end
+        local until_next = love.math.random(10, max_until)
+        
         table.insert(self.timeline, {until_next = until_next, entries = chosen_entries})
 
     end
@@ -61,9 +75,9 @@ function WaveController:update(dt)
     if game.score == self.target_score then
         -- Check if moving onto next wave
         if #self.timeline == 0 then
-            self:generateTimeline()
             self.wave = self.wave + 1
-
+            
+            self:generateTimeline()
             self:start()
         end
 

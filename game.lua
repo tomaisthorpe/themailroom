@@ -17,6 +17,7 @@ Package = Class{
     size=16,
     delivered=false,
     opacity=255,
+    timeout=0,
 }
 function Package:draw()
     if self.color == "red" then
@@ -92,10 +93,11 @@ function Package:move(dt, index)
     else
         -- Find which conveyor this package is on
         local conveyor = self:getConveyor()
+        local on_conveyor = false
 
         -- If there isn't a conveyor don't move hte package
         if conveyor ~= nil then
-
+            on_conveyor = true
             local dest = conveyor:getEndPoint()
            
             if conveyor.direction == "west" or conveyor.direction == "east" then
@@ -128,8 +130,10 @@ function Package:move(dt, index)
         end
 
         local goal = self:getGoal()
+        local on_goal = false
 
         if goal ~= nil and goal.active then
+            on_goal = true
             self.delivered = true
             if goal.color ~= self.color then
                 game.lives = game.lives - 1
@@ -138,6 +142,19 @@ function Package:move(dt, index)
                 game.score = game.score + 1
                 game.deliveredSound:play()
             end
+        end
+
+        if on_goal == false and on_conveyor == false then
+            self.timeout = self.timeout + dt
+
+            if self.timeout > 0.5 then 
+                self.shouldDelete = true
+            end
+
+            self.opacity = (1 - (self.timeout / 0.5)) * 255
+        elseif self.delivered == false then
+            self.timeout = 0
+            self.opacity = 255
         end
     end
 end
@@ -181,7 +198,7 @@ game = {
     mouseOver=nil, -- Set to non-nil if over editable grid square
     score = 0,
     waveController = nil,
-    lives = 5,
+    lives = 10,
     scaling = 1,
     sprites = {},
     paused = false,
@@ -245,7 +262,7 @@ function game:enter()
     
     game.packages = {}
     game.score = 0
-    game.lives = 5
+    game.lives = 10
     game.paused = false
     game.gameOver = false
 
@@ -606,7 +623,6 @@ function game.isSquareEmpty(exclude_package, x, y)
     for p=1,#game.packages,1 do
         if p ~= exclude_package then
             local pos2 = game.getGridPosition(game.packages[p].x, game.packages[p].y)
-
             if pos.col == pos2.col and pos.row == pos2.row then
                 return false
             end
