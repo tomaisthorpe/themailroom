@@ -21,6 +21,7 @@ function menu:init()
     end
 
     menu.image = love.graphics.newImage("assets/menu.png")
+    love.window.setTitle("The Mailroom")
 end
 
 function menu:keyreleased(key)
