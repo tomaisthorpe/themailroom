@@ -240,7 +240,11 @@ function game:init()
         red = love.graphics.newImage("assets/goal_box_active_red.png"),
         inactive = love.graphics.newImage("assets/goal_box_inactive.png"),
         wire = love.graphics.newImage("assets/goal_box_wire.png"),
-    }  
+    }
+
+    game.lorrySprites = {
+        blue = love.graphics.newImage("assets/lorry_blue.png"),
+    }
 
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
     game.sprites[2] = love.graphics.newImage("assets/wall_top.png")

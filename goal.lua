@@ -83,6 +83,12 @@ function Goal:draw()
 
 
     love.graphics.draw(game.goalBoxSprites.wire, pos[1] + 32, pos[2] + 32)
+
+    if self.active then
+        if self.color == "blue" then
+            love.graphics.draw(game.lorrySprites.blue, pos[1] + 64, pos[2] - 32)
+        end
+    end
 end
 
 return Goal
