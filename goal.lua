@@ -87,6 +87,8 @@ function Goal:draw()
     if self.active then
         if self.color == "blue" then
             love.graphics.draw(game.lorrySprites.blue, pos[1] + 64, pos[2] - 32)
+        elseif self.color == "red" then
+            love.graphics.draw(game.lorrySprites.red, pos[1] + 64, pos[2] - 32)
         end
     end
 end

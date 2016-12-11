@@ -191,7 +191,8 @@ game = {
     gameTranslateY = 0, -- Needed for mouseOver calculation
     wallColor = {100, 100, 100},
     floorColor = {150, 150, 150},
-    backgroundColor = {0, 39, 59},
+    backgroundColor = {23, 35, 40},
+    screenColor = {0, 39, 59},
     borderColor = {130, 130, 130},
     entries={},
     goals={},
@@ -244,6 +245,7 @@ function game:init()
 
     game.lorrySprites = {
         blue = love.graphics.newImage("assets/lorry_blue.png"),
+        red = love.graphics.newImage("assets/lorry_red.png"),
     }
 
     game.sprites[1] = love.graphics.newImage("assets/floor.png")
@@ -487,7 +489,16 @@ function game:draw()
     -- Scale and move the window
     love.graphics.translate(game.translate[1], game.translate[2])
     love.graphics.scale(game.scaling)
+   
+    love.graphics.setColor(100, 100, 100)
+    love.graphics.polygon("fill", -5, -5, 805, -5, 805, 605, -5, 605)
+
+    love.graphics.setColor(50, 50, 50)
+    love.graphics.polygon("fill", -1, -1, 801, -1, 801, 601, -1, 601)
     
+    love.graphics.setColor(game.screenColor)
+    love.graphics.polygon("fill", 0, 0, 800, 0, 800, 600, 0, 600)
+
     love.graphics.setColor(255, 255, 255)
     love.graphics.setFont(game.font)
     love.graphics.print("Score: " .. game.score, 5, 5, 0, 2)
@@ -549,28 +560,32 @@ function game:draw()
 
     -- Draw mouse box
     if game.mouseOver ~= nil then
-        love.graphics.setColor(40,40, 40)
+        love.graphics.setColor(40,40,40)
         
         if game.dragStart == nil or (game.dragStart.row == game.mouseOver.row and game.dragStart.col == game.mouseOver.col) then
-            love.graphics.polygon("line", game.getQuad(game.mouseOver.row, game.mouseOver.col))
+            game.drawMouseBox(game.getQuad(game.mouseOver.row, game.mouseOver.col))
         else
             -- Find if drag should be horizontal or vertical
             startQuad = game.getQuad(game.dragStart.row, game.dragStart.col)
             endQuad = game.getQuad(game.mouseOver.row, game.mouseOver.col)
             
+            local quad = nil
             if math.abs(game.dragStart.row - game.mouseOver.row) > math.abs(game.dragStart.col - game.mouseOver.col) then
                 if game.dragStart.row > game.mouseOver.row then
-                    love.graphics.polygon("line", startQuad[1], endQuad[2], startQuad[3], endQuad[4], startQuad[5], startQuad[6], startQuad[7], startQuad[8])
+                    quad = {startQuad[1], endQuad[2], startQuad[3], endQuad[4], startQuad[5], startQuad[6], startQuad[7], startQuad[8]}
+            
                 else
-                    love.graphics.polygon("line", startQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], endQuad[6], startQuad[7], endQuad[8])
+                    quad = {startQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], endQuad[6], startQuad[7], endQuad[8]}
                 end
             else
                 if game.dragStart.col > game.mouseOver.col then
-                    love.graphics.polygon("line", endQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], startQuad[6], endQuad[7], startQuad[8])
+                    quad = {endQuad[1], startQuad[2], startQuad[3], startQuad[4], startQuad[5], startQuad[6], endQuad[7], startQuad[8]}
                 else
-                    love.graphics.polygon("line", startQuad[1], startQuad[2], endQuad[3], startQuad[4], endQuad[5], startQuad[6], startQuad[7], startQuad[8])
+                    quad = {startQuad[1], startQuad[2], endQuad[3], startQuad[4], endQuad[5], startQuad[6], startQuad[7], startQuad[8]}
                 end
             end
+
+            game.drawMouseBox(quad)
         end
     end
 
@@ -591,6 +606,20 @@ function game:draw()
         love.graphics.setColor(255, 255, 255, game.waveOpacity)
         love.graphics.printf(game.waveMessage, 0, 200, 800/3, "center", 0, 3)
     end
+end
+
+function game.drawMouseBox(quad)
+    -- Generate shadow quad
+    local shadowQuad = {quad[1], quad[2] + 1, quad[3], quad[4] + 1, quad[5], quad[6] + 1, quad[7], quad[8] + 1}
+
+    love.graphics.setColor(80,80,80)
+    love.graphics.setLineWidth(3)
+    love.graphics.polygon("line", shadowQuad)
+    love.graphics.setColor(150,150,150)
+    love.graphics.polygon("line", quad) 
+    love.graphics.setColor(220, 220, 220)
+    love.graphics.setLineWidth(1)
+    love.graphics.polygon("line", quad) 
 end
 
 function game.getId(row, col)
